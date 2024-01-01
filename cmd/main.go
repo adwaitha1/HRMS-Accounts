@@ -3,8 +3,10 @@ package main
 import (
 	"HRMS/internals/server/config"
 	db "HRMS/internals/server/database"
+	"HRMS/internals/server/service"
 	"HRMS/internals/server/service/Client"
 	emp "HRMS/internals/server/service/Employee"
+	pr "HRMS/internals/server/service/Projects"
 	"HRMS/internals/server/service/SoW"
 	"HRMS/internals/server/service/vendor"
 	"context"
@@ -43,7 +45,15 @@ func init() {
 
 func main() {
 
-	db.CreateCon(ServerConfig.Database)
+	dbConn, err := db.CreateCon(ServerConfig.Database)
+	if err != nil {
+		log.Fatal("Unable to Initialise DB connection ! Error:", err.Error())
+	}
+
+	serviceActions := service.NewActions(dbConn)
+
+	// h := handler.
+	fmt.Println(serviceActions)
 
 	router := gin.Default()
 	router.GET("/", func(c *gin.Context) {
@@ -62,6 +72,10 @@ func main() {
 	router.GET("/viewClients", Client.GetClientDetails)
 	router.DELETE("/delete-client/:client_id", Client.DeleteClient)
 	router.POST("/addNewSoW", SoW.InsertSowDetails)
+	router.GET("/GetProjects", pr.GetProjectDetails)
+	router.POST("/addNewProject", pr.AddProjectDetails)
+	router.DELETE("/delete-project/:proj_id", pr.DeleteProject)
+
 	//router.POST("AddNewClient", SoW.InsertClientDetails)
 	server := &http.Server{
 		Addr:    ":8080",

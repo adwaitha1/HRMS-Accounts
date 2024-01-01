@@ -9,7 +9,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var DB *sql.DB
 var (
 	host     = "localhost"
 	port     = "3306"
@@ -17,6 +16,16 @@ var (
 	password = "root"
 	dbname   = "hrms"
 )
+
+type Database struct {
+	dbClient *sql.DB
+}
+
+var DB Database
+
+// dbInterface will have custom/new methods for mysql
+type dbInterface interface {
+}
 
 func CreateCon(dbConfig config.DatabaseConf) (*sql.DB, error) {
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbConfig.User, dbConfig.Password, dbConfig.Host, dbConfig.Port, dbConfig.DBName)

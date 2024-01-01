@@ -16,6 +16,7 @@ type Employees struct {
 }
 
 func GetEmployeesDetails(c *gin.Context) {
+
 	db := database.DB
 	if db == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection is nil"})
