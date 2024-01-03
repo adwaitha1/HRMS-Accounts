@@ -4,6 +4,8 @@ import (
 	"HRMS/internals/server/config"
 	db "HRMS/internals/server/database"
 	"HRMS/internals/server/service/Client"
+	pj "HRMS/internals/server/service/Projects"
+
 	emp "HRMS/internals/server/service/Employee"
 	"HRMS/internals/server/service/SoW"
 	"HRMS/internals/server/service/vendor"
@@ -62,7 +64,11 @@ func main() {
 	router.GET("/viewClients", Client.GetClientDetails)
 	router.DELETE("/delete-client/:client_id", Client.DeleteClient)
 	router.POST("/addNewSoW", SoW.InsertSowDetails)
-	//router.POST("AddNewClient", SoW.InsertClientDetails)
+	router.POST("/addProject", pj.AddProjectDetails)
+	router.GET("/getProjects", pj.GetProjectDetails)
+	router.DELETE("/deleteProject/:proj_id", pj.DeleteProject)
+	router.PATCH("/updateProjectStatus", pj.UpdateProjectStatus)
+	router.PATCH("/updateResourceCount", pj.UpdateProjectCount)
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: router,

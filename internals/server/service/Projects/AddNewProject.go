@@ -1,4 +1,4 @@
-package projects
+package Projects
 
 import (
 	"HRMS/internals/server/database"
@@ -25,41 +25,70 @@ type Projects struct {
 func AddProjectDetails(c *gin.Context) {
 	db := database.DB
 	var proj Projects
+	// if db == nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection is nil"})
+	// 	return
+	// }
 	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection is nil"})
+		log.Println("ERROR: Database connection is nil")
+		c.JSON(http.StatusInternalServerError, gin.H{"code": http.StatusInternalServerError, "message": "Internal Server Error", "showMessage": "Developer", "details": "Database connection is nil", "success": false})
 		return
 	}
+
+	// if err := c.BindJSON(&proj); err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// 	return
+	// }
 	if err := c.BindJSON(&proj); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Println("ERROR:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "message": "Bad Request", "showMessage": "Developer", "details": err.Error(), "success": false})
 		return
 	}
-	sqlStatement := `INSERT INTO project_details (proj_id, proj_name, proj_description, proj_status, client_id,resources_count,created_date,vendor_id)
-	 	SELECT CONCAT('IB', LPAD(COALESCE(MAX(CAST(SUBSTRING(proj_id, 3) AS UNSIGNED)), 0) + 1, 3, '0')), ?, ?, ?, ?,?, NOW(),?
+
+	sqlStatement := `INSERT INTO project_details (proj_id, proj_name, proj_description, proj_status, client_id,resources_count,vendor_id,created_date)
+	 	SELECT CONCAT('PR', LPAD(COALESCE(MAX(CAST(SUBSTRING(proj_id, 3) AS UNSIGNED)), 0) + 1, 3, '0')), ?, ?, ?, ?, ?, ?, NOW()
 	 	FROM project_details`
 	fmt.Println("SQL Statement:", sqlStatement)
 
 	var rows sql.Result
 
 	rows, err := db.Exec(sqlStatement, proj.ProjName, proj.ProjDesc, proj.ProjStatus, proj.ClientID, proj.ResourceCount, proj.Vendor_Id)
-	//fmt.Printf("VALUES:%s,%s,%s,%s,%d,%s\n", proj.ProjName, proj.ProjDesc, proj.ProjStatus,proj.ClientID, proj.ResourceCount,proj.Vendor_Id)
+	fmt.Printf("VALUES:%s,%s,%s,%s,%d,%s\n", proj.ProjName, proj.ProjDesc, proj.ProjStatus, proj.ClientID, proj.ResourceCount, proj.Vendor_Id)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting employee"})
+	// 	log.Println("Error inserting project details:", err)
+	// 	return
+	// }
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting employee"})
-		log.Println("Error inserting employee:", err)
+		log.Println("ERROR:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"code": http.StatusInternalServerError, "message": "Internal Server Error", "showMessage": "Developer", "details": "Error inserting employee: " + err.Error(), "success": false})
 		return
 	}
-	// checking the commit is working
-	// from awaitha
+
 	fmt.Println(rows.RowsAffected())
 	var lastInsertID string
-	err = db.QueryRow("SELECT CONCAT('IB', LPAD(COALESCE(MAX(CAST(SUBSTRING(emp_id, 3) AS UNSIGNED)), 0), 3, '0')) FROM employees_details").Scan(&lastInsertID)
+	err = db.QueryRow("SELECT CONCAT('PR', LPAD(COALESCE(MAX(CAST(SUBSTRING(proj_id, 3) AS UNSIGNED)), 0), 3, '0')) FROM project_details").Scan(&lastInsertID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving last insert ID", "details": err.Error()})
-		log.Println("Error retrieving last insert ID:", err)
+		log.Println("ERROR:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"code": http.StatusInternalServerError, "message": "Internal Server Error", "showMessage": "Developer", "details": "Error retrieving last insert ID: " + err.Error(), "success": false})
 		return
 	}
+
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Error retrieving last insert ID", "details": err.Error()})
+	// 	log.Println("Error retrieving last insert ID:", err)
+	// 	return
+	// }
+	// c.JSON(http.StatusCreated, gin.H{
+	// 	"message": fmt.Sprintf("New Project added successfully\nProject ID: %v", lastInsertID),
+	// })
 	c.JSON(http.StatusCreated, gin.H{
-		"message": fmt.Sprintf("Employee added successfully\nEmployee ID: %v", lastInsertID),
+		"code":    http.StatusCreated,
+		"message": "Project created successfully",
+		"data":    map[string]interface{}{"projectID": lastInsertID},
+		"success": true,
 	})
-	fmt.Println("Employee data added successfully.")
+
+	fmt.Println("Project details inserted")
 
 }

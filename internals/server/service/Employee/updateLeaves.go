@@ -29,10 +29,16 @@ func UpdateEmployeeLeave(c *gin.Context) {
 	}
 
 	var emp EmployeeDetails
+	// if err := c.BindJSON(&emp); err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// 	return
+	// }
 	if err := c.BindJSON(&emp); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Println("ERROR:", err)
+		c.JSON(http.StatusBadRequest, gin.H{"code": http.StatusBadRequest, "message": "Bad Request", "showMessage": "Developer", "details": err.Error(), "success": false})
 		return
 	}
+
 	totalWorkingDays := 22
 	if emp.LeaveCount != 0 {
 		emp.WorkingHours = float64(totalWorkingDays-int(emp.LeaveCount)) * 8.0
@@ -46,12 +52,12 @@ func UpdateEmployeeLeave(c *gin.Context) {
 		SET leave_count=?,months=?, working_hours=?, updated_date=NOW()
 		WHERE emp_id=?
 	`, emp.LeaveCount, emp.Months, emp.WorkingHours, emp.EmpID)
-
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update employee details" + err.Error()})
-		log.Println("Error while updating employee details", err)
+		log.Println("ERROR:", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"code": http.StatusInternalServerError, "message": "Internal Server Error", "showMessage": "Developer", "details": "Failed to update employee details: " + err.Error(), "success": false})
 		return
 	}
 	fmt.Println(row.RowsAffected())
-	c.JSON(http.StatusOK, gin.H{"message": "Employee details updated successfully"})
+	c.JSON(http.StatusOK, gin.H{"code": http.StatusOK, "message": "Employee details updated successfully", "success": true})
+
 }
